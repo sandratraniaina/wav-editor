@@ -1,0 +1,65 @@
+# Python bytecode and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Dependency directories
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+parts/
+sdist/
+wheels/
+
+# Package and build tools
+*.whl
+pip-wheel-metadata/
+Pipfile.lock
+pyproject.lock
+
+# Editor and IDE files
+.idea/                  # PyCharm/IntelliJ
+.vscode/               # Visual Studio Code
+*.sublime-workspace    # Sublime Text
+*.swp                  # Vim swap files
+
+# Logs and runtime data
+*.log
+logs/
+*.pid
+*.seed
+*.gz
+
+# Testing and coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+pytest_cache/
+.tox/
+
+# macOS-specific files
+.DS_Store
+
+# Windows-specific files
+Thumbs.db
+
+# Environment variables and secrets
+.env
+*.env.*
+*.secret
+
+# Miscellaneous
+*.bak
+*.tmp
+*.temp
+scratch/
