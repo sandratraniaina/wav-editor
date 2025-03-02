@@ -26,10 +26,10 @@ Pipfile.lock
 pyproject.lock
 
 # Editor and IDE files
-.idea/                  # PyCharm/IntelliJ
-.vscode/               # Visual Studio Code
-*.sublime-workspace    # Sublime Text
-*.swp                  # Vim swap files
+.idea/
+.vscode/
+*.sublime-workspace
+*.swp
 
 # Logs and runtime data
 *.log
