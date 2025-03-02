@@ -23,3 +23,30 @@ class AudioProcessor:
         self.audio_data = audio_data
         self.min_value, self.max_value = get_bit_depth_range(header['bits_per_sample'])
         return self
+    
+    def amplify(self, factor):
+        """
+        Amplify audio data by the given factor.
+        
+        Args:
+            factor: Amplification factor (1.0 = no change, 2.0 = twice as loud)
+            
+        Returns:
+            List of amplified audio samples
+        """
+        if self.audio_data is None or self.header is None:
+            raise ValueError("No audio data loaded. Call load_data() first.")
+        
+        amplified_data = []
+        for sample in self.audio_data:
+            new_sample = int(sample * factor)
+            
+            # Clipping protection
+            if new_sample > self.max_value:
+                new_sample = self.max_value
+            elif new_sample < self.min_value:
+                new_sample = self.min_value
+                
+            amplified_data.append(new_sample)
+        
+        return amplified_data
