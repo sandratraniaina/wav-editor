@@ -36,3 +36,18 @@ def read_fmt_chunk(file):
     
     return (fmt_chunk_id, fmt_chunk_size, audio_format, num_channels, 
             sample_rate, byte_rate, block_align, bits_per_sample)
+
+def find_data_chunk(file):
+    """Find the data chunk in the WAV file."""
+    data_chunk_id = file.read(4)
+    while data_chunk_id != b'data':
+        # Skip this chunk
+        chunk_size = struct.unpack('<I', file.read(4))[0]
+        file.read(chunk_size)
+        data_chunk_id = file.read(4)
+        
+        if len(data_chunk_id) < 4:  # EOF
+            raise ValueError("Not a valid WAV file: data chunk missing")
+    
+    data_size = struct.unpack('<I', file.read(4))[0]
+    return data_chunk_id, data_size
