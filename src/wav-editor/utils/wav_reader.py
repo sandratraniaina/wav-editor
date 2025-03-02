@@ -51,3 +51,33 @@ def find_data_chunk(file):
     
     data_size = struct.unpack('<I', file.read(4))[0]
     return data_chunk_id, data_size
+
+def read_8bit_audio_data(raw_data):
+    """Process 8-bit audio data."""
+    fmt = 'B'  # unsigned char
+    samples_count = len(raw_data)
+    # Convert to signed for consistent processing
+    return [sample - 128 for sample in struct.unpack(f'{samples_count}{fmt}', raw_data)]
+
+def read_24bit_audio_data(raw_data, bytes_per_sample):
+    """Process 24-bit audio data."""
+    samples_count = len(raw_data) // bytes_per_sample
+    audio_data = []
+    for i in range(samples_count):
+        start = i * bytes_per_sample
+        # Convert 3 bytes (24-bit) to a signed int
+        value = int.from_bytes(raw_data[start:start+3], byteorder='little', signed=True)
+        audio_data.append(value)
+    return audio_data
+
+def read_standard_audio_data(raw_data, bits_per_sample, bytes_per_sample):
+    """Process 16-bit or 32-bit audio data."""
+    if bits_per_sample == 16:
+        fmt = '<h'  # signed short
+    elif bits_per_sample == 32:
+        fmt = '<i'  # signed int
+    else:
+        raise ValueError(f"Unexpected bit depth in standard reader: {bits_per_sample}")
+    
+    samples_count = len(raw_data) // bytes_per_sample
+    return list(struct.unpack(f'{samples_count}{fmt}', raw_data))
