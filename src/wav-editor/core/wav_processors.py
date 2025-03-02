@@ -50,3 +50,29 @@ class AudioProcessor:
             amplified_data.append(new_sample)
         
         return amplified_data
+    
+    def normalize(self):
+        """
+        Normalize audio data to use the full dynamic range.
+        
+        Returns:
+            List of normalized audio samples
+        """
+        if self.audio_data is None or self.header is None:
+            raise ValueError("No audio data loaded. Call load_data() first.")
+        
+        # Find the maximum absolute value in the audio data
+        max_abs = max(abs(sample) for sample in self.audio_data)
+        if max_abs == 0:  # Avoid division by zero
+            return self.audio_data.copy()
+        
+        # Calculate normalization factor
+        norm_factor = self.max_value / max_abs
+        
+        # Apply normalization
+        normalized_data = []
+        for sample in self.audio_data:
+            new_sample = int(sample * norm_factor)
+            normalized_data.append(new_sample)
+        
+        return normalized_data
