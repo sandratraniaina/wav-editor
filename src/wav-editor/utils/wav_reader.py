@@ -15,3 +15,24 @@ def read_wav_header(file):
         raise ValueError("Not a valid WAV file: WAVE format missing")
     
     return riff_chunk_id, chunk_size, format_id
+
+def read_fmt_chunk(file):
+    """Read the format chunk of the WAV file."""
+    fmt_chunk_id = file.read(4)
+    if fmt_chunk_id != b'fmt ':
+        raise ValueError("Not a valid WAV file: fmt subchunk missing")
+    
+    fmt_chunk_size = struct.unpack('<I', file.read(4))[0]
+    audio_format = struct.unpack('<H', file.read(2))[0]
+    num_channels = struct.unpack('<H', file.read(2))[0]
+    sample_rate = struct.unpack('<I', file.read(4))[0]
+    byte_rate = struct.unpack('<I', file.read(4))[0]
+    block_align = struct.unpack('<H', file.read(2))[0]
+    bits_per_sample = struct.unpack('<H', file.read(2))[0]
+    
+    # Skip any extra fmt bytes
+    if fmt_chunk_size > 16:
+        file.read(fmt_chunk_size - 16)
+    
+    return (fmt_chunk_id, fmt_chunk_size, audio_format, num_channels, 
+            sample_rate, byte_rate, block_align, bits_per_sample)
