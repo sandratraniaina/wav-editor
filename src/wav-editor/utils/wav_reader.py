@@ -81,3 +81,49 @@ def read_standard_audio_data(raw_data, bits_per_sample, bytes_per_sample):
     
     samples_count = len(raw_data) // bytes_per_sample
     return list(struct.unpack(f'{samples_count}{fmt}', raw_data))
+
+def read_wav_file(file_path):
+    """
+    Manually read a WAV file without using audio libraries.
+    Returns a tuple of (header_info, audio_data)
+    """
+    with open(file_path, 'rb') as file:
+        # Read header sections
+        riff_chunk_id, chunk_size, format_id = read_wav_header(file)
+        
+        fmt_data = read_fmt_chunk(file)
+        (fmt_chunk_id, fmt_chunk_size, audio_format, num_channels, 
+         sample_rate, byte_rate, block_align, bits_per_sample) = fmt_data
+        
+        data_chunk_id, data_size = find_data_chunk(file)
+        
+        # Construct header information
+        header = {
+            'chunk_id': riff_chunk_id,
+            'chunk_size': chunk_size,
+            'format': format_id,
+            'fmt_chunk_id': fmt_chunk_id,
+            'fmt_chunk_size': fmt_chunk_size,
+            'audio_format': audio_format,
+            'num_channels': num_channels,
+            'sample_rate': sample_rate,
+            'byte_rate': byte_rate,
+            'block_align': block_align,
+            'bits_per_sample': bits_per_sample,
+            'data_chunk_id': data_chunk_id,
+            'data_size': data_size
+        }
+        
+        # Read the actual audio data
+        raw_data = file.read(data_size)
+        bytes_per_sample = bits_per_sample // 8
+        
+        # Process audio data based on bit depth
+        if bits_per_sample == 8:
+            audio_data = read_8bit_audio_data(raw_data)
+        elif bits_per_sample == 24:
+            audio_data = read_24bit_audio_data(raw_data, bytes_per_sample)
+        else:
+            audio_data = read_standard_audio_data(raw_data, bits_per_sample, bytes_per_sample)
+        
+        return header, audio_data
