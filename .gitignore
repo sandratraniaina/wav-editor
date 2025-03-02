@@ -63,3 +63,5 @@ Thumbs.db
 *.tmp
 *.temp
 scratch/
+
+*.wav
