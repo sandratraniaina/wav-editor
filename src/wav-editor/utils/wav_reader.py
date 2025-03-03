@@ -1,5 +1,6 @@
 # wav_reader.py
 import struct
+import numpy as np
 
 def read_wav_header(file):
     """Read and validate the WAV file header."""
@@ -71,16 +72,17 @@ def read_24bit_audio_data(raw_data, bytes_per_sample):
     return audio_data
 
 def read_standard_audio_data(raw_data, bits_per_sample, bytes_per_sample):
-    """Process 16-bit or 32-bit audio data."""
+    """Process 16-bit or 32-bit audio data with NumPy."""
     if bits_per_sample == 16:
-        fmt = '<h'  # signed short
+        dtype = np.int16
     elif bits_per_sample == 32:
-        fmt = '<i'  # signed int
+        dtype = np.int32
     else:
-        raise ValueError(f"Unexpected bit depth in standard reader: {bits_per_sample}")
-    
-    samples_count = len(raw_data) // bytes_per_sample
-    return list(struct.unpack(f'{samples_count}{fmt}', raw_data))
+        raise ValueError(f"Unexpected bit depth: {bits_per_sample}")
+
+    if len(raw_data) % bytes_per_sample != 0:
+        print(f"Warning: Truncating {len(raw_data) % bytes_per_sample} leftover bytes")
+    return np.frombuffer(raw_data, dtype=dtype).tolist()
 
 def read_wav_file(file_path):
     """
