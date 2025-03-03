@@ -11,6 +11,10 @@ class AudioProcessor:
         self.min_value = None
         self.max_value = None
     
+    def check_data(self):
+        if self.audio_data is None or self.header is None:
+            raise ValueError("No audio data loaded. Call load_data() first.")
+    
     def load_data(self, header, audio_data):
         """
         Load audio data and header for processing.
@@ -34,8 +38,7 @@ class AudioProcessor:
         Returns:
             List of amplified audio samples
         """
-        if self.audio_data is None or self.header is None:
-            raise ValueError("No audio data loaded. Call load_data() first.")
+        self.check_data()
         
         amplified_data = []
         for sample in self.audio_data:
@@ -58,8 +61,7 @@ class AudioProcessor:
         Returns:
             List of normalized audio samples
         """
-        if self.audio_data is None or self.header is None:
-            raise ValueError("No audio data loaded. Call load_data() first.")
+        self.check_data()
         
         # Find the maximum absolute value in the audio data
         max_abs = max(abs(sample) for sample in self.audio_data)
