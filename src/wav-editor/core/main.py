@@ -87,8 +87,7 @@ def process_audio(processor, args, audio_data):
         print(f"Anti-distortion amplification: {args.anti_distort}")
         print(f"Using smoothing factor: {args.smoothing}")
         processed_data = processor.anti_distortion(
-            args.anti_distort, 
-            args.smoothing
+            args.anti_distort
         )
         processing_applied = True
     

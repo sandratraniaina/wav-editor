@@ -80,54 +80,47 @@ class AudioProcessor:
         
         return normalized_data
     
-    def anti_distortion(self, factor, smoothing_factor=1):
+    def anti_distortion(self, threshold=0.8):
         """
-        Apply amplification with anti-distortion using soft clipping.
-        
-        Uses a smooth transition around threshold to prevent harsh distortion.
-        This creates a more natural-sounding amplification at high levels.
+        Apply soft clipping to prevent harsh distortion using a tanh-like function.
         
         Args:
-            factor: Amplification factor (1.0 = no change, 2.0 = twice as loud)
-            smoothing_factor: Controls threshold for soft clipping (0.0-1.0)
+            threshold: Threshold level (0.0-1.0) where soft clipping begins
             
         Returns:
-            List of amplified audio samples with anti-distortion
+            List of processed audio samples with anti-distortion applied
         """
         self.check_data()
         
-        # Set threshold based on smoothing factor
-        # Higher smoothing_factor means lower threshold (more soft clipping)
-        threshold = 1.0 - smoothing_factor
+        print(f"Applying anti-distortion with threshold: {threshold}")
+        print("Before anti-distortion (first 10 samples):", self.audio_data[:10])
+        
         threshold_value = int(self.max_value * threshold)
-        print(f"Max value: {self.max_value}")
         processed_data = []
         
         for sample in self.audio_data:
-            # Apply initial gain
-            amplified = sample * factor
-            
-            # Apply soft clipping if above threshold
-            abs_sample = abs(amplified)
+            abs_sample = abs(sample)
             if abs_sample > threshold_value:
-                sign = 1 if amplified > 0 else -1
+                # Apply soft clipping using a tanh-like function
+                sign = 1 if sample > 0 else -1
+                # Normalize to 0-1 range
+                normalized = abs_sample / self.max_value
+                # Apply soft curve above threshold
+                if normalized > threshold:
+                    normalized = threshold + (1 - threshold) * np.tanh((normalized - threshold) / (1 - threshold))
+                # Scale back to sample range
+                new_sample = int(sign * normalized * self.max_value)
                 
-                # Calculate how much we're over the threshold
-                excess = abs_sample - threshold_value
-                # Apply cubic soft-clipping formula
-                # This creates a smooth transition instead of hard clipping
-                # Formula: threshold + (excess - excess³/(3*threshold²))
-                soft_clip = threshold_value + (excess - (excess**3) / (3 * (threshold_value**2)))
-                new_sample = int(sign * soft_clip)
+                # Final clipping protection
+                if new_sample > self.max_value:
+                    new_sample = self.max_value
+                elif new_sample < self.min_value:
+                    new_sample = self.min_value
+                processed_data.append(new_sample)
             else:
-                new_sample = int(amplified)
-            
-            # Final clipping protection (in case calculations exceed bounds)
-            if new_sample > self.max_value:
-                new_sample = self.max_value
-            elif new_sample < self.min_value:
-                new_sample = self.min_value
-            processed_data.append(new_sample)
+                processed_data.append(sample)
+        
+        print("After anti-distortion (first 10 samples):", processed_data[:10])
         
         return processed_data
     
