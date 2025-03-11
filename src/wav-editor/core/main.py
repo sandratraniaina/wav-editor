@@ -3,7 +3,7 @@ import argparse
 import os
 from ..utils.wav_reader import read_wav_file
 from ..utils.wav_writer import write_wav_file
-from ..utils.plotter import plot_audio  # New import
+from ..utils.plotter import plot_audio  
 from .wav_processors import AudioProcessor
 
 def main():
@@ -20,6 +20,18 @@ def main():
     processing_group.add_argument('--anti-distort', type=float, default=None,
                         help='Apply amplification with anti-distortion (e.g., 2.0)')
     
+    # Noise removal options
+    noise_group = parser.add_argument_group('Noise Removal Options')
+    noise_group.add_argument('--noise-pattern', type=str, default=None,
+                        help='WAV file containing noise pattern to remove')
+    noise_group.add_argument('--noise-method', type=str, default='spectral_subtraction',
+                        choices=['spectral_subtraction'],
+                        help='Noise removal method to use')
+    noise_group.add_argument('--alpha', type=float, default=2.0,
+                        help='Oversubtraction factor for noise removal (higher = more noise reduction)')
+    noise_group.add_argument('--beta', type=float, default=0.01,
+                        help='Spectral floor for noise removal (higher = less musical noise)')
+    
     # Advanced options
     advanced_group = parser.add_argument_group('Advanced Options')
     advanced_group.add_argument('--smoothing', type=float, default=0.3,
@@ -28,6 +40,10 @@ def main():
                         help='Use multi-band processing with anti-distortion')
     advanced_group.add_argument('--bands', type=int, default=3,
                         help='Number of frequency bands for multi-band processing')
+    advanced_group.add_argument('--fft-size', type=int, default=2048,
+                        help='FFT size for spectral processing')
+    advanced_group.add_argument('--hop-size', type=int, default=512,
+                        help='Hop size for spectral processing')
     
     # Plotting option
     parser.add_argument('--plot', action='store_true',
@@ -40,8 +56,9 @@ def main():
         return
     
     # Check for processing option
-    if args.amplify is None and not args.normalize and args.anti_distort is None:
-        print("Error: No processing option selected. Use --amplify, --normalize, or --anti-distort.")
+    if (args.amplify is None and not args.normalize and 
+        args.anti_distort is None and args.noise_pattern is None):
+        print("Error: No processing option selected. Use --amplify, --normalize, --anti-distort, or --noise-pattern.")
         return
     
     # Validate smoothing factor
@@ -82,6 +99,34 @@ def main():
         if args.normalize:
             print("Normalizing audio...")
             processed_data = processor.normalize()
+            processing_applied = True
+            
+        if args.noise_pattern is not None:
+            if not os.path.exists(args.noise_pattern):
+                print(f"Error: Noise pattern file '{args.noise_pattern}' does not exist.")
+                return
+                
+            print(f"Removing noise using pattern: {args.noise_pattern}")
+            print(f"Noise removal method: {args.noise_method}")
+            
+            # Load the noise pattern
+            noise_header, noise_data = read_wav_file(args.noise_pattern)
+            
+            # Check if sample rates match
+            if noise_header['sample_rate'] != header['sample_rate']:
+                print(f"Warning: Noise pattern sample rate ({noise_header['sample_rate']} Hz) "
+                      f"does not match input file sample rate ({header['sample_rate']} Hz).")
+                print("Resampling might be needed for optimal results.")
+            
+            # Apply noise removal
+            processed_data = processor.remove_noise(
+                noise_data,
+                method=args.noise_method,
+                alpha=args.alpha,
+                beta=args.beta,
+                fft_size=args.fft_size,
+                hop_size=args.hop_size
+            )
             processing_applied = True
         
         if not processing_applied:
